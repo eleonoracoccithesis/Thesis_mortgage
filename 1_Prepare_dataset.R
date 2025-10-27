@@ -24,3 +24,8 @@ merged_data <- sav_files %>%
   map(read_file_safe) %>%
   reduce(full_join, by = "nomem_encr")
 
+
+# In RStudio:
+install.packages("usethis")
+usethis::use_git_config(user.name = "Eleonora Cocci", user.email = "e.cocci@tilburguniversity.edu")
+
