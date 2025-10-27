@@ -28,4 +28,4 @@ merged_data <- sav_files %>%
 # In RStudio:
 install.packages("usethis")
 usethis::use_git_config(user.name = "Eleonora Cocci", user.email = "e.cocci@tilburguniversity.edu")
-hello
+
