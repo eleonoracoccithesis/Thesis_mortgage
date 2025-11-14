@@ -1,4 +1,4 @@
-# 4. TRAIN REGULARIZED LOGISTIC REGRESSION (RLR) -----------------------------
+# 4. TRAIN REGULARIZED LOGISTIC REGRESSION (RLR) ------------------------------
 
 # 1. LOAD LIBRARIES ---------------------------------------------------------
 library(caret)
