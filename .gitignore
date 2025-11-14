@@ -1,6 +1,9 @@
-.Rproj.user
+*.sav
+*.csv
+*.rds
+*.xlsx
 .Rhistory
 .RData
-.httr-oauth
-.DS_Store
-.quarto
+temp/
+data_raw/
+data_large/
