@@ -1,10 +1,10 @@
-# 1. LIBRARIES ---------------------------------------------------------------
+#0. LOAD PACKAGES ______________________________________________________________
 library(caret)
 library(dplyr)
 library(tidyr)
 
 
-# 2. SAFE SUMMARY FUNCTION (same as before) ----------------------------------
+#1. SUMMARY FUNCTION ___________________________________________________________
 f1Summary <- function(data, lev = NULL, model = NULL) {
   positive <- "No"
   data <- data[complete.cases(data[, c("pred", "obs")]), ]
@@ -36,9 +36,8 @@ f1Summary <- function(data, lev = NULL, model = NULL) {
   c(Precision = precision, Recall = recall, F1 = f1)
 }
 
-# 3. PREPARE TRAINING DATA (same as RLR/RF) ----------------------------------
-# assumes train_final already exists and is your TRAIN set
 
+#2. PREPARE TRAINING DATA ______________________________________________________
 train_df_bin <- train_final %>%
   filter(premium_debt_paid_2023 %in% c("1", "2")) %>%
   select(-participant, -year, -split)
@@ -59,7 +58,8 @@ stopifnot(sum(is.na(train_df_bin)) == 0)
 # Check class counts
 table(train_df_bin$premium_debt_paid_2023)
 
-# 4. CV SETUP -----------------------------------------------------------------
+
+#3. CV SETUP ___________________________________________________________________
 cv_control <- trainControl(
   method = "cv",
   number = 5,
@@ -68,12 +68,14 @@ cv_control <- trainControl(
   summaryFunction = f1Summary
 )
 
-# 5. HYPERPARAMETER GRID FOR KNN ---------------------------------------------
+
+#4. HYPERPARAMETER GRID ________________________________________________________
 grid_knn <- expand.grid(
   k = c(3, 5, 7, 9, 11)
 )
 
-# 6. TRAIN KNN ----------------------------------------------------------------
+
+#5. TRAIN KNN __________________________________________________________________
 set.seed(42)
 
 model_knn_f1 <- train(
@@ -87,7 +89,8 @@ model_knn_f1 <- train(
   na.action = na.omit
 )
 
-# 7. INSPECT RESULTS ----------------------------------------------------------
+
+#6. INSPECT RESULTS ____________________________________________________________
 print(model_knn_f1)
 
 best_hyperparams_knn <- model_knn_f1$bestTune
@@ -101,7 +104,7 @@ sd_F1_knn   <- sd(cv_results_knn$F1)
 cat("\nKNN Mean F1:", round(mean_F1_knn, 3),
     " SD F1:", round(sd_F1_knn, 3), "\n")
 
-# 8. T-TEST ON F1 SCORES (optional) ------------------------------------------
+
+#7. T-TEST ON F1 SCORES ________________________________________________________
 ttest_F1_knn <- t.test(cv_results_knn$F1, mu = 0.5)
 print(ttest_F1_knn)
-
