@@ -1,10 +1,11 @@
-# 1. LIBRARIES ---------------------------------------------------------------
+#0. LOAD PACKAGES ______________________________________________________________
 library(caret)
 library(dplyr)
 library(tidyr)
 library(ranger)
 
-# 2. SAFE SUMMARY FUNCTION (same as for RLR) ---------------------------------
+
+#1. SUMMARY FUNCTION ___________________________________________________________
 f1Summary <- function(data, lev = NULL, model = NULL) {
   positive <- "No"
   data <- data[complete.cases(data[, c("pred", "obs")]), ]
@@ -36,9 +37,8 @@ f1Summary <- function(data, lev = NULL, model = NULL) {
   c(Precision = precision, Recall = recall, F1 = f1)
 }
 
-# 3. PREPARE TRAINING DATA (same as for RLR) --------------------------------
-# assumes train_final already exists and is your TRAIN set
 
+#2. PREPARE TRAINING DATA ______________________________________________________
 train_df_bin <- train_final %>%
   filter(premium_debt_paid_2023 %in% c("1", "2")) %>%
   select(-participant, -year, -split)
@@ -59,7 +59,8 @@ stopifnot(sum(is.na(train_df_bin)) == 0)
 # Check class counts
 table(train_df_bin$premium_debt_paid_2023)
 
-# 4. CLASS WEIGHTS (handle imbalance) ---------------------------------------
+
+#3. CLASS WEIGHTS (to handle imbalance) ________________________________________
 class_counts  <- table(train_df_bin$premium_debt_paid_2023)
 class_weights <- 1 / class_counts
 class_weights <- class_weights / sum(class_weights)
@@ -68,7 +69,8 @@ row_weights   <- class_weights[as.character(train_df_bin$premium_debt_paid_2023)
 # Sanity check
 stopifnot(length(row_weights) == nrow(train_df_bin))
 
-# 5. CV SETUP ----------------------------------------------------------------
+
+#4. CV SETUP ___________________________________________________________________
 cv_control <- trainControl(
   method = "cv",
   number = 5,
@@ -77,7 +79,8 @@ cv_control <- trainControl(
   summaryFunction = f1Summary
 )
 
-# 6. HYPERPARAMETER GRID FOR RF (ranger) ------------------------------------
+
+#5. HYPERPARAMETER GRID ________________________________________________________
 p <- ncol(train_df_bin) - 1  # number of predictors
 
 grid_rf <- expand.grid(
@@ -86,7 +89,8 @@ grid_rf <- expand.grid(
   min.node.size = c(1, 5, 10)
 )
 
-# 7. TRAIN RANDOM FOREST -----------------------------------------------------
+
+#6. TRAIN RANDOM FOREST ________________________________________________________
 set.seed(42)
 
 model_rf_f1 <- train(
@@ -96,12 +100,13 @@ model_rf_f1 <- train(
   trControl = cv_control,
   metric    = "F1",
   tuneGrid  = grid_rf,
-  weights   = row_weights,        # <-- key change: use 'weights', not 'case.weights'
+  weights   = row_weights,
   importance = "impurity",
   na.action = na.omit
 )
 
-# 8. INSPECT RESULTS ---------------------------------------------------------
+
+#7. INSPECT RESULTS ____________________________________________________________
 print(model_rf_f1)
 
 best_hyperparams_rf <- model_rf_f1$bestTune
@@ -115,6 +120,7 @@ sd_F1_rf   <- sd(cv_results_rf$F1)
 cat("\nRF Mean F1:", round(mean_F1_rf, 3),
     " SD F1:", round(sd_F1_rf, 3), "\n")
 
-# 9. T-TEST ON F1 SCORES (optional) -----------------------------------------
+
+#8. T-TEST ON F1 SCORES ________________________________________________________
 ttest_F1_rf <- t.test(cv_results_rf$F1, mu = 0.5)
 print(ttest_F1_rf)
