@@ -1,5 +1,3 @@
-## 4. TRAIN REGULARIZED LOGISTIC REGRESSION (RLR) ---------------------------
-
 # 1. LIBRARIES ---------------------------------------------------------------
 library(caret)
 library(dplyr)
