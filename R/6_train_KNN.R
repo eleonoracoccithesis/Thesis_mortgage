@@ -1,5 +1,3 @@
-## K-NEAREST NEIGHBORS (KNN) WITH F1 FOR "No" -------------------------------
-
 # 1. LIBRARIES ---------------------------------------------------------------
 library(caret)
 library(dplyr)
@@ -106,3 +104,4 @@ cat("\nKNN Mean F1:", round(mean_F1_knn, 3),
 # 8. T-TEST ON F1 SCORES (optional) ------------------------------------------
 ttest_F1_knn <- t.test(cv_results_knn$F1, mu = 0.5)
 print(ttest_F1_knn)
+
