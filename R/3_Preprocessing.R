@@ -2,7 +2,7 @@
 library(tidyverse)
 library(caret)
 
-k
+
 #1. LOAD DATA _________________________________________________________________
 cleaned_data <- read_csv("C:/Users/cocci/Downloads/Study material/DSS_thesis_2026/Thesis_2026_R/R/cleaned_data.csv")
 
