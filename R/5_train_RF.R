@@ -1,11 +1,8 @@
-## RANDOM FOREST WITH F1 FOR "No" -------------------------------------------
-
 # 1. LIBRARIES ---------------------------------------------------------------
 library(caret)
 library(dplyr)
 library(tidyr)
-library(ranger)   # backend RF
-# (glmnet not needed here)
+library(ranger)
 
 # 2. SAFE SUMMARY FUNCTION (same as for RLR) ---------------------------------
 f1Summary <- function(data, lev = NULL, model = NULL) {
@@ -39,7 +36,7 @@ f1Summary <- function(data, lev = NULL, model = NULL) {
   c(Precision = precision, Recall = recall, F1 = f1)
 }
 
-# 3. PREPARE TRAINING DATA (same preprocessing as RLR) ----------------------
+# 3. PREPARE TRAINING DATA (same as for RLR) --------------------------------
 # assumes train_final already exists and is your TRAIN set
 
 train_df_bin <- train_final %>%
@@ -68,6 +65,9 @@ class_weights <- 1 / class_counts
 class_weights <- class_weights / sum(class_weights)
 row_weights   <- class_weights[as.character(train_df_bin$premium_debt_paid_2023)]
 
+# Sanity check
+stopifnot(length(row_weights) == nrow(train_df_bin))
+
 # 5. CV SETUP ----------------------------------------------------------------
 cv_control <- trainControl(
   method = "cv",
@@ -86,20 +86,19 @@ grid_rf <- expand.grid(
   min.node.size = c(1, 5, 10)
 )
 
-
 # 7. TRAIN RANDOM FOREST -----------------------------------------------------
 set.seed(42)
 
 model_rf_f1 <- train(
   premium_debt_paid_2023 ~ .,
-  data          = train_df_bin,
-  method        = "ranger",
-  trControl     = cv_control,
-  metric        = "F1",
-  tuneGrid      = grid_rf,
-  case.weights  = as.numeric(row_weights),  # per-row weights
-  importance    = "impurity",
-  na.action     = na.omit
+  data      = train_df_bin,
+  method    = "ranger",
+  trControl = cv_control,
+  metric    = "F1",
+  tuneGrid  = grid_rf,
+  weights   = row_weights,        # <-- key change: use 'weights', not 'case.weights'
+  importance = "impurity",
+  na.action = na.omit
 )
 
 # 8. INSPECT RESULTS ---------------------------------------------------------
@@ -117,6 +116,5 @@ cat("\nRF Mean F1:", round(mean_F1_rf, 3),
     " SD F1:", round(sd_F1_rf, 3), "\n")
 
 # 9. T-TEST ON F1 SCORES (optional) -----------------------------------------
-# Example: compare mean F1 to 0.5
 ttest_F1_rf <- t.test(cv_results_rf$F1, mu = 0.5)
 print(ttest_F1_rf)
