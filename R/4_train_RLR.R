@@ -1,10 +1,11 @@
-# 1. LIBRARIES ---------------------------------------------------------------
+#0. LOAD PACKAGES ______________________________________________________________
 library(caret)
 library(dplyr)
 library(tidyr)
 library(glmnet)
 
-# 2. SAFE SUMMARY FUNCTION: F1 FOR CLASS "No" --------------------------------
+
+#1. SUMMARY FUNCTION ___________________________________________________________
 f1Summary <- function(data, lev = NULL, model = NULL) {
   positive <- "No"
   
@@ -38,9 +39,8 @@ f1Summary <- function(data, lev = NULL, model = NULL) {
   c(Precision = precision, Recall = recall, F1 = f1)
 }
 
-# 3. PREPARE TRAINING DATA ---------------------------------------------------
-# assumes train_final already exists and is your TRAIN set
 
+#2. PREPARE TRAINING DATA ______________________________________________________
 train_df_bin <- train_final %>%
   filter(premium_debt_paid_2023 %in% c("1", "2")) %>%
   select(-participant, -year, -split)
@@ -61,13 +61,15 @@ stopifnot(sum(is.na(train_df_bin)) == 0)
 # Check final class counts
 table(train_df_bin$premium_debt_paid_2023)
 
-# 4. CLASS WEIGHTS (HANDLE IMBALANCE) ---------------------------------------
+
+#3. CLASS WEIGHTS (to handle imbalance) ________________________________________
 class_counts  <- table(train_df_bin$premium_debt_paid_2023)
 class_weights <- 1 / class_counts
 class_weights <- class_weights / sum(class_weights)
 row_weights   <- class_weights[as.character(train_df_bin$premium_debt_paid_2023)]
 
-# 5. CV SETUP ----------------------------------------------------------------
+
+#4. CV SETUP ___________________________________________________________________
 cv_control <- trainControl(
   method = "cv",
   number = 5,
@@ -76,13 +78,15 @@ cv_control <- trainControl(
   summaryFunction = f1Summary
 )
 
-# 6. HYPERPARAMETER GRID -----------------------------------------------------
+
+#5. HYPERPARAMETER GRID ________________________________________________________
 tune_grid <- expand.grid(
   alpha  = c(0, 0.5, 1),                 # ridge, elastic net, lasso
   lambda = 10^seq(-3, 1, length.out = 10)
 )
 
-# 7. TRAIN REGULARIZED LOGISTIC REGRESSION ----------------------------------
+
+#6. TRAIN REGULARIZED LOGISTIC REGRESSION ______________________________________
 set.seed(42)
 
 model_rlr_f1 <- train(
@@ -97,7 +101,8 @@ model_rlr_f1 <- train(
   na.action = na.omit
 )
 
-# 8. INSPECT RESULTS ---------------------------------------------------------
+
+#7. INSPECT RESULTS ____________________________________________________________
 print(model_rlr_f1)
 
 best_hyperparams <- model_rlr_f1$bestTune
@@ -111,8 +116,7 @@ sd_F1   <- sd(cv_results_f1$F1)
 cat("\nMean F1:", round(mean_F1, 3),
     " SD F1:", round(sd_F1, 3), "\n")
 
-# 9. T-TEST ON F1 SCORES -----------------------------------------------------
-# Example: is mean F1 significantly different from 0.5?
+
+#8. T-TEST ON F1 SCORES ________________________________________________________
 ttest_F1 <- t.test(cv_results_f1$F1, mu = 0.5)
 print(ttest_F1)
-# If you prefer vs 0, just use: t.test(cv_results_f1$F1, mu = 0)
