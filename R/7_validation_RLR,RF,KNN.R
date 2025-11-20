@@ -1,11 +1,10 @@
-## 1. LIBRARIES -----------------------------------------------------------
+#0. LOAD PACKAGES ______________________________________________________________
 library(dplyr)
 library(tidyr)
 library(caret)
 
-## 2. PREPROCESS VAL / TEST LIKE TRAIN ------------------------------------
-# assumes: train_final, val_final, test_final already exist
 
+#1. PREPROCESS VAL / TEST LIKE TRAIN ___________________________________________
 prep_bin <- function(df) {
   df_bin <- df %>%
     filter(premium_debt_paid_2023 %in% c("1", "2")) %>%
@@ -29,7 +28,8 @@ test_df_bin <- prep_bin(test_final)   # for later, when you evaluate on test
 table(val_df_bin$premium_debt_paid_2023)
 table(test_df_bin$premium_debt_paid_2023)
 
-## 3. HELPER: PRECISION / RECALL / F1 FOR A GIVEN POSITIVE ----------------
+
+#2. HELPER: PRECISION / RECALL / F1 FOR A GIVEN POSITIVE _______________________
 compute_prf <- function(predictions, truth, positive) {
   truth <- factor(truth)
   predictions <- factor(predictions, levels = levels(truth))
@@ -54,7 +54,8 @@ compute_prf <- function(predictions, truth, positive) {
   c(Precision = precision, Recall = recall, F1 = f1)
 }
 
-## 4. EVALUATION FUNCTION (LIKE YOUR OLD ONE) -----------------------------
+
+#3. EVALUATION FUNCTION ________________________________________________________
 evaluate_model <- function(predictions, truth) {
   truth <- factor(truth, levels = c("No", "Yes"))
   predictions <- factor(predictions, levels = levels(truth))
@@ -78,9 +79,8 @@ evaluate_model <- function(predictions, truth) {
   )
 }
 
-## 5. VALIDATION: RLR, RF, KNN -------------------------------------------
-# Assumes model_rlr_f1, model_rf_f1, model_knn_f1 are already trained
 
+#4. VALIDATION: RLR, RF, KNN ___________________________________________________
 # RLR
 val_pred_rlr <- predict(model_rlr_f1, newdata = val_df_bin)
 results_rlr_val <- evaluate_model(
@@ -88,7 +88,7 @@ results_rlr_val <- evaluate_model(
   val_df_bin$premium_debt_paid_2023
 )
 
-# Random Forest
+# RF
 val_pred_rf <- predict(model_rf_f1, newdata = val_df_bin)
 results_rf_val <- evaluate_model(
   val_pred_rf,
@@ -102,7 +102,8 @@ results_knn_val <- evaluate_model(
   val_df_bin$premium_debt_paid_2023
 )
 
-## 6. SUMMARY TABLE FOR VALIDATION RESULTS --------------------------------
+
+#5. SUMMARY TABLE FOR VALIDATION RESULTS _______________________________________
 val_summary <- data.frame(
   Model        = c("RLR", "Random Forest", "KNN"),
   Precision_No = round(c(
@@ -143,7 +144,3 @@ val_summary <- data.frame(
 )
 
 val_summary
-
-## (optional, for pretty table in RMarkdown) ------------------------------
-# knitr::kable(val_summary, caption = "Validation performance for all models")
-
