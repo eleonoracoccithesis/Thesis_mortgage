@@ -4,7 +4,7 @@ library(tidyr)
 library(caret)
 
 
-#1. PREPROCESS VAL / TEST LIKE TRAIN ___________________________________________
+#1. PREPROCESS FUNCTION ________________________________________________________
 prep_bin <- function(df) {
   df_bin <- df %>%
     filter(premium_debt_paid_2023 %in% c("1", "2")) %>%
@@ -29,7 +29,7 @@ table(val_df_bin$premium_debt_paid_2023)
 table(test_df_bin$premium_debt_paid_2023)
 
 
-#2. HELPER: PRECISION / RECALL / F1 FOR A GIVEN POSITIVE _______________________
+#2. HELPER: PRECISION / RECALL / F1 ____________________________________________
 compute_prf <- function(predictions, truth, positive) {
   truth <- factor(truth)
   predictions <- factor(predictions, levels = levels(truth))
